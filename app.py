@@ -18,18 +18,25 @@ users_chat_history = {}
 chat_id = ""
 prompt = ""
 
+
 def update_chat_history(role, text):
     content = {
         "role": role,
-        "parts": [{"text": text,}],
+        "parts": [
+            {
+                "text": text,
+            }
+        ],
     }
     users_chat_history[chat_id].append(content)
+
 
 def get_chat_history():
     if chat_id not in users_chat_history:
         users_chat_history[chat_id] = []
 
     return users_chat_history[chat_id]
+
 
 def fetch_response():
     try:
@@ -51,24 +58,27 @@ def fetch_response():
         print("error", error)
         raise
 
-@app.route('/chat', methods=['POST'])
+
+@app.route("/chat", methods=["POST"])
 def chat():
-    if not request.json or ('prompt' not in request.json and 'chat_id' not in request.json):
-        abort(400, description="Request must be a JSON object with a 'prompt' and 'chat_id' fields.")
+    if not request.json or (
+        "prompt" not in request.json and "chat_id" not in request.json
+    ):
+        abort(
+            400,
+            description="Request must be a JSON object with a 'prompt' and 'chat_id' fields.",
+        )
 
     global chat_id, prompt
-    chat_id = request.json['chatId']
-    prompt = request.json['prompt']
+    chat_id = request.json["chatId"]
+    prompt = request.json["prompt"]
     model_response = fetch_response()
-    response = jsonify({
-        'response': model_response,
-        'status': 200
-    })
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    response = jsonify({"response": model_response, "status": 200})
+    response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
 
-@app.route('/deletechat/<chatId>', methods=['DELETE'])
+@app.route("/deletechat/<chatId>", methods=["DELETE"])
 def deleletechat(chatId):
     if chatId in users_chat_history:
         del users_chat_history[chatId]
@@ -76,14 +86,16 @@ def deleletechat(chatId):
     else:
         return jsonify(error="Chat not found. Please check again"), 404
 
+
 @app.errorhandler(HTTPException)
 def handle_http_exception(e):
     response_data = {
         "error": e.description,
         "response": "An error occurred. Please check your request.",
-        "status": e.code
+        "status": e.code,
     }
     return jsonify(response_data), e.code
+
 
 @app.errorhandler(Exception)
 def handle_generic_exception(e):
@@ -93,6 +105,6 @@ def handle_generic_exception(e):
     response_data = {
         "error": "An internal server error occurred.",
         "response": "There is currently a high traffic. Please try again later.",
-        "status": 500
+        "status": 500,
     }
     return jsonify(response_data), 500
